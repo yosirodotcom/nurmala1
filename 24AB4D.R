@@ -10,10 +10,10 @@ col_mhs <- read_sheet("https://docs.google.com/spreadsheets/d/1Ab0iTaBz9IIBTP8CF
 df_mhs <- df_mhs %>%
   mutate(
     D3 = case_when(
-      D3 == 'Kurang Mahir ( TOEIC 350, IELTS 3.5, TOEFL 433)' ~ 'Lower Intermediate ( TOEIC 350, IELTS 3.5, TOEFL 433)',
-      D3 == 'Dasar (TOEIC 255, IELTS 2.5, TOEFL 347)' ~ 'Basic (TOEIC 255, IELTS 2.5, TOEFL 347)',
-      D3 == 'Sedang (TOEIC 500, IELTS 5.0, TOEFL 477)' ~ 'Upper Intermediate (TOEIC 500, IELTS 5.0, TOEFL 477)',
-      D3 == 'Mahir (TOEIC 685, IELTS 6.5, TOEFL 550)' ~ 'Advanced (TOEIC 685, IELTS 6.5, TOEFL 550)'
+      D3 == 'Kurang Mahir ( TOEIC 350, IELTS 3.5, TOEFL 433)' ~ 'Lower Intermediate\n( TOEIC 350, IELTS 3.5, TOEFL 433)',
+      D3 == 'Dasar (TOEIC 255, IELTS 2.5, TOEFL 347)' ~ 'Basic\n(TOEIC 255, IELTS 2.5, TOEFL 347)',
+      D3 == 'Sedang (TOEIC 500, IELTS 5.0, TOEFL 477)' ~ 'Upper Intermediate\n(TOEIC 500, IELTS 5.0, TOEFL 477)',
+      D3 == 'Mahir (TOEIC 685, IELTS 6.5, TOEFL 550)' ~ 'Advanced\n(TOEIC 685, IELTS 6.5, TOEFL 550)'
   )
 )
 
@@ -248,27 +248,49 @@ df_summary <- df_mhs %>%
 ggplot(df_summary, aes(x = reorder(D3, frequency), y = frequency, fill = frequency)) +
   geom_col() +
   geom_text(aes(label = paste0(frequency, " (", round(prob * 100, 1), "%)")),
-            hjust = -0.1, color = "black", size=6) +
+            hjust = -0.1, 
+            color = "black",      # Warna sudah hitam
+            family = "Times New Roman", # Tambahkan font family
+            size = 6) +
   coord_flip() +
   scale_fill_gradient(low = "#2A3439", high = "lightgrey") +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.22))) + # Increased expansion slightly
-  labs(x = NULL, y = "Frequency", title = "English Proficiency Distribution") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.32))) +
+  labs(x = NULL, 
+       y = "Frequency", 
+       title = "English Proficiency Distribution") +
   theme_minimal() +
   theme(
     axis.text.y = element_text(
-      # Adjust text properties for vertical axis labels
-      hjust = 1,       # Right-justify the text so the end aligns with the axis
-      vjust = 0.5,     # Center the text vertically
-      size = 9,        # Adjust size if needed
-      color = "black"  # Set color if needed
-      # Consider angle = 0 if you prefer horizontal text, but it takes more horizontal space
+      hjust = 1,
+      vjust = 0.5,
+      size = 18,
+      color = "black",          # Warna sudah hitam
+      family = "Times New Roman"  # Tambahkan font family
     ),
-    axis.text.x = element_text( # These are now the frequency labels on the horizontal axis
-      size = 9,
-      color = "black"
+    axis.text.x = element_text(
+      size = 15,
+      color = "black",          # Warna sudah hitam
+      family = "Times New Roman"  # Tambahkan font family
+    ),
+    axis.title.y = element_text( # Style untuk judul sumbu y ("Frequency")
+      color = "black",
+      family = "Times New Roman",
+      size = 18, # Sesuaikan ukuran jika perlu
+      margin = margin(r = 10) # Tambahkan margin jika perlu
+    ),
+    axis.title.x = element_text( # Style untuk judul sumbu x (meskipun NULL saat ini)
+      color = "black",
+      family = "Times New Roman",
+      size = 11 # Sesuaikan ukuran jika perlu
+    ),
+    plot.title = element_text( # Style untuk judul plot
+      color = "black",
+      family = "Times New Roman",
+      size = 20, # Sesuaikan ukuran jika perlu
+      hjust = 0.5 # Pusatkan judul plot
     ),
     legend.position = "none",
-    plot.margin = margin(10, 10, 10, 100) # Increase the left margin to provide more space
+    plot.margin = margin(10, 10, 10, 100)
   )
 
 
@@ -289,80 +311,93 @@ likert_bar(str_kolom = "C13", level=level2_en)
 likert_bar(str_kolom = "C14", level=level3_en)
 # StopWord
 
-if (!exists("df") || !("C11" %in% names(df))) {
-  stop("Dataframe 'df' with column 'C11' not found. Please load your data first.")
-}
-if (nrow(df) == 0 || all(is.na(df$C11)) || all(df$C11 == "")){
-  stop("Column 'df$C11' is empty or contains no processable text.")
-}
+stopwerd <-  function(data, str_kolom){
+  if (!str_kolom %in% names(data)) {
+    stop(paste("The specified column '", str_kolom, "' was not found in the dataframe.", sep = ""))
+  }
 
-text_list <- unlist(strsplit(df$C11, "\\W+"))
-text_list <- tolower(text_list)
-text_list <- trimws(text_list)
-text_df <- data.frame(table(text = text_list))
-text_df <- text_df[text_df$text != "" & !is.na(text_df$text), ]
+  # Correctly extract the column data
+  text_data_from_column <- data[[str_kolom]]
 
-# Fetch stopwords from the local file
-# Make sure "stopwords-id.txt" is in your R working directory or provide the full path.
-# Example: local_stopw_file <- "C:/Users/YourName/Documents/R_Projects/stopwords-id.txt"
-local_stopw_file <- "stopwords-id.txt" 
+  # Check if the extracted column data is empty or unprocessable
+  if (is.null(text_data_from_column) || 
+      length(text_data_from_column) == 0 || 
+      all(is.na(text_data_from_column)) || 
+      all(text_data_from_column == "")) {
+    stop("The column is empty or contains no processable text.") # This matches your error
+  }
 
-stopw <- tryCatch({
-  readLines(local_stopw_file, warn = FALSE) 
-}, error = function(e) {
-  message(paste("Could not read stopwords from local file:", local_stopw_file))
-  message("Original error: ", e$message)
-  message("Please ensure the file exists at the specified location and is readable.")
-  message("Proceeding without stopwords or using a fallback list if defined elsewhere.")
-  c("di", "ke", "dari", "yang", "dan", "ini", "itu", "adalah", "dengan", "untuk") 
-})
-
-text_df <- text_df[!is.element(text_df$text, stopw), ]
-# Filter out words with zero frequency if any somehow remain
-text_df <- text_df[text_df$Freq > 6, ]
-
-# --- End of data preparation ---
-
-
-# 1. Store current margin settings and set new ones for the word cloud plot
-opar <- par(no.readonly = TRUE)
-on.exit(par(opar))
-par(mar = c(0, 0, 0, 0))
-
-# 2. Define your color gradient
-start_color <- "#555555"
-end_color <- "lightgrey"
-
-color_palette_func <- colorRampPalette(c(start_color, end_color))
-
-# 3. Generate the word cloud
-if (nrow(text_df) > 0 && "Freq" %in% names(text_df) && "text" %in% names(text_df) && sum(text_df$Freq) > 0) {
+  # Example of how to start your processing:
+  text_list <- unlist(strsplit(text_data_from_column, "\\W+"))
+  text_list <- tolower(text_list)
+  text_list <- trimws(text_list)
+  text_list <- text_list[!is.na(text_list) & text_list != ""]
   
-  # Determine the number of unique words to plot (respecting min.freq if it were > 1)
-  # For min.freq = 1, this is just the number of rows in text_df
-  num_words_to_plot <- nrow(text_df) 
-  
-  # Ensure we have at least one color, even if only one word
-  num_gradient_colors <- max(1, num_words_to_plot) 
-  gradient_colors <- color_palette_func(num_gradient_colors)
+  text_df_intermediate <- data.frame(table(text = text_list))
 
-  wordcloud(
-    words = text_df$text,
-    freq = text_df$Freq,
-    min.freq = 1,           # If you increase this, num_words_to_plot logic might need adjustment
-    random.order = FALSE,
-    ordered.colors = TRUE,  # This is TRUE, so colors vector length matters
-    rot.per = 0.25,
-    colors = gradient_colors, # Now 'colors' will match the length of words
-    scale = c(10,1)
-  )
-} else {
-  plot.new()
-  try(title(main = "No processable words for word cloud", 
-            sub = "Check your input 'df$C11' and stopword list.", 
-            cex.main = 1, cex.sub = 0.8), silent = TRUE)
-  message("Warning: Not enough valid words to generate a word cloud after filtering.")
-  message("Please check the content of 'df$C11' and your stopword processing.")
+  # Fetch stopwords from the local file
+  # Make sure "stopwords-id.txt" is in your R working directory or provide the full path.
+  # Example: local_stopw_file <- "C:/Users/YourName/Documents/R_Projects/stopwords-id.txt"
+  local_stopw_file <- "stopwords-id.txt" 
+
+  stopw <- tryCatch({
+    readLines(local_stopw_file, warn = FALSE) 
+    }, error = function(e) {
+      message(paste("Could not read stopwords from local file:", local_stopw_file))
+      message("Original error: ", e$message)
+      message("Please ensure the file exists at the specified location and is readable.")
+      message("Proceeding without stopwords or using a fallback list if defined elsewhere.")
+      c("di", "ke", "dari", "yang", "dan", "ini", "itu", "adalah", "dengan", "untuk") 
+    })
+
+  text_df_intermediate <- text_df_intermediate[!is.element(text_df_intermediate$text, stopw), ]
+  text_df_intermediate <- text_df_intermediate[text_df_intermediate$Freq > 6, ] # Your Freq filter
+
+  # --- End of data preparation ---
+
+
+  # 1. Store current margin settings and set new ones for the word cloud plot
+  opar <- par(no.readonly = TRUE)
+  on.exit(par(opar))
+  par(mar = c(0, 0, 0, 0))
+
+  # 2. Define your color gradient
+  start_color <- "#555555"
+  end_color <- "lightgrey"
+
+  color_palette_func <- colorRampPalette(c(start_color, end_color))
+
+  # 3. Generate the word cloud
+  if (nrow(text_df_intermediate) > 0 && "Freq" %in% names(text_df_intermediate) && "text" %in% names(text_df_intermediate) && sum(text_df_intermediate$Freq) > 0) {
+    
+    # Determine the number of unique words to plot (respecting min.freq if it were > 1)
+    # For min.freq = 1, this is just the number of rows in text_df
+    num_words_to_plot <- nrow(text_df_intermediate) 
+    
+    # Ensure we have at least one color, even if only one word
+    num_gradient_colors <- max(1, num_words_to_plot) 
+    gradient_colors <- color_palette_func(num_gradient_colors)
+
+    wordcloud(
+      words = text_df_intermediate$text,
+      freq = text_df_intermediate$Freq,
+      min.freq = 1,           # If you increase this, num_words_to_plot logic might need adjustment
+      random.order = FALSE,
+      ordered.colors = TRUE,  # This is TRUE, so colors vector length matters
+      rot.per = 0.25,
+      colors = gradient_colors, # Now 'colors' will match the length of words
+      scale = c(10,2)
+    )
+  } else {
+    plot.new()
+    try(title(main = "No processable words for word cloud", 
+              sub = "Check your input 'df$C11' and stopword list.", 
+              cex.main = 1, cex.sub = 0.8), silent = TRUE)
+    message("Warning: Not enough valid words to generate a word cloud after filtering.")
+    message("Please check the content of 'df$C11' and your stopword processing.")
+  }
+
+  # Original parameters are restored by on.exit(par(opar))
 }
 
-# Original parameters are restored by on.exit(par(opar))
+stopwerd(data = df_mhs, str_kolom = "C11")
