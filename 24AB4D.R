@@ -1,8 +1,6 @@
 install.packages("pacman")
 pacman::p_load(dplyr, tidyr, likert, ggplot2, magrittr, readr, stringr, grid, shadowtext, wordcloud, googlesheets4, vcd, corrplot, DescTools, extrafont, showtext)
 
-df_dosen <- read_sheet("https://docs.google.com/spreadsheets/d/1SUKklelRoL8JoekQ0SOmXTskqfs6EvHfRo7qQkRVKys/edit?gid=221341234#gid=221341234", sheet = "df_dosen")
-col_dosen <- read_sheet("https://docs.google.com/spreadsheets/d/1SUKklelRoL8JoekQ0SOmXTskqfs6EvHfRo7qQkRVKys/edit?gid=2031418127#gid=2031418127", sheet = "col_dosen")
 df_mhs <- read_sheet("https://docs.google.com/spreadsheets/d/1Ab0iTaBz9IIBTP8CFFXlODIP1A4HBm5u2K-NuUBCbqI/edit?resourcekey=&gid=1244913331#gid=1244913331", sheet = "df_mhs")
 col_mhs <- read_sheet("https://docs.google.com/spreadsheets/d/1Ab0iTaBz9IIBTP8CFFXlODIP1A4HBm5u2K-NuUBCbqI/edit?resourcekey=&gid=1089213745#gid=1089213745", sheet = "col_mhs")
 
@@ -78,16 +76,9 @@ for (i in list_level3_col) {
   level3_en <- c("Yes", "No")
   
   
- 
-
 df <- df_mhs
 pertanyaan <- col_mhs
 
-
-
-# Sekarang, kolom-kolom C1, C2, ..., C14 dalam df Anda akan berisi jawaban dalam Bahasa Inggris.
-# Contoh tampilan beberapa baris dari kolom yang sudah ditransformasi:
-# print(head(df[, names(column_to_map_info)]))
 
 # Functions
 likert_bar <- function(str_kolom, level){
