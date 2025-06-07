@@ -1,5 +1,5 @@
 install.packages("pacman")
-pacman::p_load(dplyr, tidyr, likert, ggplot2, magrittr, readr, stringr, grid, shadowtext, wordcloud, googlesheets4, vcd, corrplot, DescTools, extrafont, showtext)
+pacman::p_load(dplyr, tidyr, likert, ggplot2, magrittr, readr, stringr, grid, shadowtext, wordcloud, googlesheets4, vcd, corrplot, DescTools, extrafont, showtext, scales)
 
 df_mhs <- read_sheet("https://docs.google.com/spreadsheets/d/1Ab0iTaBz9IIBTP8CFFXlODIP1A4HBm5u2K-NuUBCbqI/edit?resourcekey=&gid=1244913331#gid=1244913331", sheet = "df_mhs")
 col_mhs <- read_sheet("https://docs.google.com/spreadsheets/d/1Ab0iTaBz9IIBTP8CFFXlODIP1A4HBm5u2K-NuUBCbqI/edit?resourcekey=&gid=1089213745#gid=1089213745", sheet = "col_mhs")
@@ -71,9 +71,9 @@ for (i in list_level3_col) {
 
   
   # Target Level dalam Bahasa Inggris (sesuai permintaan Anda)
-  level1_en <- c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree")
-  level2_en <- c("Always", "Frequently", "Sometimes", "Rarely", "Never")
-  level3_en <- c("Yes", "No")
+level1_en <- c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree")
+level2_en <- c("Always", "Frequently", "Sometimes", "Rarely", "Never")
+level3_en <- c("Yes", "No")
   
   
 df <- df_mhs
@@ -230,6 +230,8 @@ bar_chart <- function(str_kolom, level){
 
   plt
 }
+
+
 # Demografi
 df_summary <- df_mhs %>%
   filter(D1=="D3 Administrasi Bisnis", D2=="IV D") %>%
@@ -300,8 +302,9 @@ likert_bar(str_kolom = "C10", level=level1_en)
 likert_bar(str_kolom = "C12", level=level2_en)
 likert_bar(str_kolom = "C13", level=level2_en)
 likert_bar(str_kolom = "C14", level=level3_en)
-# StopWord
 
+
+# StopWord
 stopwerd <-  function(data, str_kolom){
   if (!str_kolom %in% names(data)) {
     stop(paste("The specified column '", str_kolom, "' was not found in the dataframe.", sep = ""))
@@ -390,5 +393,70 @@ stopwerd <-  function(data, str_kolom){
 
   # Original parameters are restored by on.exit(par(opar))
 }
-
 stopwerd(data = df_mhs, str_kolom = "C11")
+
+
+compare_viz <- function(data, x_var, fill_var,
+                        title = "", subtitle = "",
+                        x_lab = "Response", y_lab = "Proportion of Responses",
+                        fill_lab = "Legend") {
+
+  # --- Data Preparation ---
+  # Step A: Shorten the labels for a cleaner legend.
+  data <- data %>%
+    mutate(!!sym(fill_var) := case_when(
+      .data[[fill_var]] == 'Lower Intermediate\n( TOEIC 350, IELTS 3.5, TOEFL 433)' ~ 'Lower Intermediate',
+      .data[[fill_var]] == 'Basic\n(TOEIC 255, IELTS 2.5, TOEFL 347)'                 ~ 'Basic',
+      .data[[fill_var]] == 'Upper Intermediate\n(TOEIC 500, IELTS 5.0, TOEFL 477)' ~ 'Upper Intermediate',
+      .data[[fill_var]] == 'Advanced\n(TOEIC 685, IELTS 6.5, TOEFL 550)'              ~ 'Advanced',
+      TRUE ~ as.character(.data[[fill_var]])
+    ))
+
+  # Step B: Set a logical factor order for the legend and stacking.
+  level_order <- c("Basic", "Lower Intermediate", "Upper Intermediate", "Advanced")
+  data <- data %>%
+    mutate(!!sym(fill_var) := factor(.data[[fill_var]], levels = level_order))
+
+  # --- Color Palette Generation ---
+  num_levels <- length(levels(data[[fill_var]]))
+  grey_palette <- colorRampPalette(c("darkgrey", "#333333"))
+  colors_for_plot <- grey_palette(num_levels)
+
+  # --- Plot Creation ---
+  ggplot(data, aes(x = .data[[x_var]], fill = .data[[fill_var]])) +
+    
+    # The geom_bar layer remains the same
+    geom_bar(position = "fill") +
+
+    # All geom_text and label_data calculations have been REMOVED
+
+    scale_y_continuous(labels = percent) +
+    scale_fill_manual(
+        values = colors_for_plot,
+        # Use the fill_lab argument for the legend's title
+        name = fill_lab
+    ) +
+    labs(
+      title = title,
+      subtitle = subtitle,
+      x = x_lab,
+      y = y_lab
+    ) +
+    theme_minimal() +
+    theme(
+      # <<< CRITICAL CHANGE: RE-ENABLE THE LEGEND >>>
+      legend.position = "right", # Display the legend on the right side
+
+      text = element_text(family = "Times New Roman", color = "black", size = 12),
+      plot.title = element_text(size = 16, face = "bold"),
+      legend.title = element_text(size = 14), # Style the legend title
+      legend.text = element_text(size = 12),  # Style the legend items
+      axis.title = element_text(size = 18),
+      axis.text.x = element_text(size = 14, angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 14)
+    )
+}
+
+
+
+compare_viz(data = df_mhs, x_var = "C4", fill_var = "D3")
