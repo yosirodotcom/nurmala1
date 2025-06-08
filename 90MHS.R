@@ -1,5 +1,5 @@
 install.packages("pacman")
-pacman::p_load(dplyr, tidyr, likert, ggplot2, magrittr, readr, stringr, grid, shadowtext, wordcloud, googlesheets4, vcd, corrplot, DescTools, extrafont, showtext)
+pacman::p_load(dplyr, tidyr,writexl, rcompanion, knitr, likert, ggplot2, magrittr, readr, stringr, grid, shadowtext, wordcloud, googlesheets4, vcd, corrplot, DescTools, extrafont, showtext, scales)
 
 df_mhs <- read_sheet("https://docs.google.com/spreadsheets/d/1Ab0iTaBz9IIBTP8CFFXlODIP1A4HBm5u2K-NuUBCbqI/edit?resourcekey=&gid=1244913331#gid=1244913331", sheet = "df_mhs")
 col_mhs <- read_sheet("https://docs.google.com/spreadsheets/d/1Ab0iTaBz9IIBTP8CFFXlODIP1A4HBm5u2K-NuUBCbqI/edit?resourcekey=&gid=1089213745#gid=1089213745", sheet = "col_mhs")
@@ -9,7 +9,7 @@ col_mhs <- read_sheet("https://docs.google.com/spreadsheets/d/1Ab0iTaBz9IIBTP8CF
 # Prepare Data
 
 ## select column contain word "A" or "B" or "D"
-df_mhs <- df_mhs %>% select(contains(c("A", "B", "D")))
+df_mhs <- df_mhs %>% select(contains(c("C", "D")))
 # filter df_mhs by D1 == "D3 Administrasi Bisnis" and D2 == "IV D" or D1 != "D3 Administrasi Bisnis"
 df_mhs1 <- df_mhs %>% filter(D1 == "D3 Administrasi Bisnis", D2 == "IV D")
 df_mhs2 <- df_mhs %>% filter(D1 != "D3 Administrasi Bisnis")
@@ -45,49 +45,33 @@ df_mhs <- df_mhs %>%
     )
   )
 
-list_level1_col <- list('A1','A3','A5')
-level1_en <- c("Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree")
+list_level1_col <- list('C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10')
 for (i in list_level1_col) {
   df_mhs <- df_mhs %>%
     mutate(
       !!sym(i) := case_when(
         !!sym(i) == 'Sangat setuju' ~ 'Strongly Agree',
         !!sym(i) == 'Setuju' ~ 'Agree',
-        !!sym(i) == 'Ragu-ragu' ~ 'Neutral',
+        !!sym(i) == 'Netral' ~ 'Neutral',
         !!sym(i) == 'Tidak setuju' ~ 'Disagree',
         !!sym(i) == 'Sangat tidak setuju' ~ 'Strongly Disagree'
       )
   )
 }
 
-list_level2_col <- list('A4','B1')
+list_level2_col <- list('C1', 'C3', 'C12', 'C13')
 for (i in list_level2_col) {
   df_mhs <- df_mhs %>%
     mutate(
       !!sym(i) := case_when(
-        !!sym(i) == 'Sangat setuju' ~ 'Strongly Agree',
-        !!sym(i) == 'Setuju' ~ 'Agree',
-        !!sym(i) == 'Netral' ~ 'Neutral',
-        !!sym(i) == 'Neutral' ~ 'Neutral',
-        !!sym(i) == 'Tidak setuju' ~ 'Disagree',
-        !!sym(i) == 'Sangat tidak setuju' ~ 'Strongly Disagree'
+        !!sym(i) == 'Selalu' ~ 'Always',
+        !!sym(i) == 'Sering' ~ 'Frequently',
+        !!sym(i) == 'Kadang-kadang' ~ 'Sometimes',
+        !!sym(i) == 'Jarang' ~ 'Rarely',
+        !!sym(i) == 'Tidak pernah' ~ 'Never'
       )
   )
 }
-
-# level3_en <- c("Perspective of life or system of values.", "Can be an architecture of a building.", "Can be a local product, including textiles.", "Can be a song, a story, or a poem.", "Everything is true")
-# df_mhs <- df_mhs %>%
-#   mutate(
-#     !!sym('A2') := case_when(
-#       !!sym('A2') == "Pandangan hidup atau sistem nilai." ~ "Perspective of life or system of values.",
-#       !!sym('A2') == "Dapat berupa arsitektur sebuah bangunan." ~ "Can be an architecture of a building.",
-#       !!sym('A2') == "Dapat berupa produk lokal termasuk tekstil." ~ "Can be a local product, including textiles.",
-#       !!sym('A2') == "Dapat berupa nyanyian, dongeng, atau pantun." ~ "Can be a song, a story, or a poem.",
-#       !!sym('A2') == "Semuanya benar" ~ "Everything is true"
-#     )
-# )
-
-
 
 
 # Functions
@@ -106,7 +90,7 @@ likert_bar <- function(dat, str_kolom, level){
     arrange(frequency) %>%
     mutate(!!str_kolom := factor(!!sym(str_kolom), levels = unique(!!sym(str_kolom))))
 
-  keterangan <- col_dosen %>%
+  keterangan <- col_mhs %>%
     filter(nama == str_kolom) %>%
     pull(keterangan)
 
@@ -145,8 +129,20 @@ likert_bar <- function(dat, str_kolom, level){
   p
 
 }
-
-
+# Likert Distribution
+likert_bar(str_kolom = "C1", level=level2_en)
+likert_bar(str_kolom = "C2", level=level3_en)
+likert_bar(str_kolom = "C3", level=level2_en)
+likert_bar(str_kolom = "C4", level=level1_en)
+likert_bar(str_kolom = "C5", level=level1_en)
+likert_bar(str_kolom = "C6", level=level1_en)
+likert_bar(str_kolom = "C7", level=level1_en)
+likert_bar(str_kolom = "C8", level=level1_en)
+likert_bar(str_kolom = "C9", level=level1_en)
+likert_bar(str_kolom = "C10", level=level1_en)
+likert_bar(str_kolom = "C12", level=level2_en)
+likert_bar(str_kolom = "C13", level=level2_en)
+likert_bar(str_kolom = "C14", level=level3_en)
 
 
 # Demografi
@@ -259,20 +255,7 @@ ggplot(df_summary, aes(x = reorder(D3, frequency), y = frequency, fill = frequen
 
 
 
-# Likert Distribution
-likert_bar(str_kolom = "C1", level=level2_en)
-likert_bar(str_kolom = "C2", level=level3_en)
-likert_bar(str_kolom = "C3", level=level2_en)
-likert_bar(str_kolom = "C4", level=level1_en)
-likert_bar(str_kolom = "C5", level=level1_en)
-likert_bar(str_kolom = "C6", level=level1_en)
-likert_bar(str_kolom = "C7", level=level1_en)
-likert_bar(str_kolom = "C8", level=level1_en)
-likert_bar(str_kolom = "C9", level=level1_en)
-likert_bar(str_kolom = "C10", level=level1_en)
-likert_bar(str_kolom = "C12", level=level2_en)
-likert_bar(str_kolom = "C13", level=level2_en)
-likert_bar(str_kolom = "C14", level=level3_en)
+
 # StopWord
 
 stopwerd <-  function(data, str_kolom){
@@ -365,3 +348,116 @@ stopwerd <-  function(data, str_kolom){
 }
 
 stopwerd(data = df_mhs, str_kolom = "C11")
+
+
+
+analyze_chi_square <- function(data, dependent_var, independent_vars, filename = "chi_square_analysis_results.xlsx") {
+  
+  data <- data %>%
+    mutate(!!sym(dependent_var) := case_when(
+      .data[[dependent_var]] == 'Lower Intermediate\n( TOEIC 350, IELTS 3.5, TOEFL 433)' ~ 'Lower Intermediate',
+      .data[[dependent_var]] == 'Basic\n(TOEIC 255, IELTS 2.5, TOEFL 347)'                 ~ 'Basic',
+      .data[[dependent_var]] == 'Upper Intermediate\n(TOEIC 500, IELTS 5.0, TOEFL 477)' ~ 'Upper Intermediate',
+      .data[[dependent_var]] == 'Advanced\n(TOEIC 685, IELTS 6.5, TOEFL 550)'              ~ 'Advanced',
+      TRUE ~ as.character(.data[[dependent_var]])
+    ))
+  # Create an empty list to store the results
+  results_list <- list()
+  
+  # Loop through each independent variable
+  for (var in independent_vars) {
+    # Ensure the columns exist in the data frame
+    if (!var %in% names(data) || !dependent_var %in% names(data)) {
+      warning(paste("Variable '", var, "' or '", dependent_var, "' not found. Skipping.", sep=""))
+      next # Skip to the next iteration
+    }
+    
+    # Create a contingency table
+    contingency_table <- table(data[[var]], data[[dependent_var]])
+    
+    # Perform the Chi-Square test
+    # A tryCatch block handles cases where the test cannot be performed
+    test_result <- tryCatch({
+      # The change is adding the simulate.p.value argument right here
+      chisq.test(contingency_table, simulate.p.value = TRUE)
+      
+    }, error = function(e) NULL)
+    
+    # The rest of the code remains unchanged
+    if (is.null(test_result)) {
+      warning(paste("Chi-square test failed for variable '", var, "'. Skipping.", sep=""))
+      next
+    }
+    # Calculate Cramér's V
+    v <- cramerV(contingency_table, ci = FALSE)
+    
+    # Identify significant cell contributions
+    significant_cells_text <- ""
+    if (test_result$p.value <= 0.05) {
+      residuals <- test_result$stdres
+      significant_cells <- which(abs(residuals) > 2, arr.ind = TRUE)
+      
+      if (nrow(significant_cells) > 0) {
+        cell_names <- apply(significant_cells, 1, function(cell_indices) {
+          row_name <- rownames(residuals)[cell_indices[1]]
+          col_name <- colnames(residuals)[cell_indices[2]]
+          resid_val <- round(residuals[cell_indices[1], cell_indices[2]], 2)
+          paste0(row_name, " & ", col_name, " (resid: ", resid_val, ")")
+        })
+        significant_cells_text <- paste(cell_names, collapse = "; ")
+      }
+    }
+    
+    # Interpret effect size
+    df <- min(nrow(contingency_table) - 1, ncol(contingency_table) - 1)
+    v_interpretation <- case_when(
+      v < 0.10 / sqrt(df) ~ "Negligible",
+      v < 0.30 / sqrt(df) ~ "Small",
+      v < 0.50 / sqrt(df) ~ "Medium",
+      TRUE ~ "Large"
+    )
+    
+    # Store all results for the current variable
+    results_list[[var]] <- data.frame(
+      "Independent Variable" = var,
+      "X-squared" = round(test_result$statistic, 2),
+      "df" = test_result$parameter,
+      "p-value" = round(test_result$p.value, 4),
+      "p-value Conclusion" = ifelse(test_result$p.value <= 0.05, "Significant", "Not Significant"),
+      "Cramér's V" = round(v, 4),
+      "Effect Size" = v_interpretation,
+      "Significant Contributions" = significant_cells_text,
+      check.names = FALSE
+    )
+  }
+  
+  # Combine the list of results into a single data frame
+  results_table <- bind_rows(results_list)
+  
+  # Save the final table to an Excel file
+  write_xlsx(results_table, path = filename)
+  
+  # Print a confirmation message
+  print(paste("Analysis complete. Results saved to", filename))
+  
+  # Return the results table
+  return(results_table)
+}
+
+# 1. Define the variables you want to test
+my_independent_vars <- c('C1', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C12', 'C13')
+my_dependent_var <- 'D1'
+my_output_filename <- "Prodi_Relationship_Analysis.xlsx"
+
+# 2. Call the function to run the analysis and save the results
+final_results <- analyze_chi_square(
+  data = df_mhs, 
+  dependent_var = my_dependent_var, 
+  independent_vars = my_independent_vars,
+  filename = my_output_filename
+)
+
+# 3. Display the final results table in the console using kable
+kable(final_results, caption = "Comprehensive Chi-Square Test Results")
+
+
