@@ -13,7 +13,7 @@ df_mhs_post <- read_sheet(url_post, sheet = "responses")
 # --- 3. PERSIAPAN DAN PEMBERSIHAN DATA ---
 
 # Memisahkan kolom berdasarkan jenis responsnya
-kolom_persetujuan <- c("Q4", "Q5", "Q6", "Q7", "Q8")
+kolom_persetujuan <- c("Q4", "Q5", "Q6", "Q7", "Q8", "Q9")
 kolom_frekuensi <- c("Q1", "Q3", "Q10", "Q11")
 kolom_biner <- c("Q2")
 

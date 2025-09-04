@@ -556,7 +556,7 @@ analyze_chi_square <- function(data, dependent_var, independent_vars, filename =
 
 
 # 1. Define the variables you want to test
-my_independent_vars <- c('C1', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C12', 'C13')
+my_independent_vars <- c('C1','C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10', 'C12', 'C13')
 my_dependent_var <- 'D3'
 my_output_filename <- "D3_Relationship_Analysis.xlsx"
 

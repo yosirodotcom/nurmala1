@@ -1,0 +1,149 @@
+```{r}
+pacman::p_load(seminr, rio)
+```
+
+```{r}
+dataku <- import("df_sem.xlsx")
+dataku <- na.omit(dataku)
+head(df)
+```
+
+```{r}
+# -------------------------------------------------------------------
+# LANGKAH 1: MEMBUAT MODEL PENGUKURAN (MEASUREMENT MODEL)
+# -------------------------------------------------------------------
+m_model <- constructs(
+    composite("A", multi_items("A_", 1:8), weights = mode_B), # formatif
+    composite("C", multi_items("C_", 1:3), weights = mode_B), # formatif
+    composite("D", multi_items("D_", 1:2), weights = mode_A), # reflektif
+    composite("F", multi_items("F_", 1:3), weights = mode_A), # reflektif
+    composite("G", multi_items("G_", 1:3), weights = mode_A), # reflektif
+    composite("I", single_item("I"), weights = mode_A)
+)
+```
+
+
+```{r}
+# -------------------------------------------------------------------
+# LANGKAH 2: MEMBUAT MODEL STRUKTURAL (STRUCTURAL MODEL)
+# -------------------------------------------------------------------
+
+s_model <- relationships(
+  paths(from = c("F", "G", "C"), to = c("A")),
+  paths(from = c("A"), to = c("D")),
+  paths(from = c("D", "G"), to = "I") 
+)
+```
+
+
+```{r}
+# -------------------------------------------------------------------
+# LANGKAH 3: MENJALANKAN ANALISIS PLS-SEM
+# -------------------------------------------------------------------
+
+pls_model <- estimate_pls(
+  data = dataku,
+  measurement_model = m_model,
+  structural_model = s_model,
+  inner_weights = path_weighting,
+  missing = mean_replacement,
+  missing_value = "-99"
+)
+
+# Lihat ringkasan hasil awal
+summary_model <- summary(pls_model)
+```
+
+```{r}
+plot(pls_model)
+```
+
+# Evaluation of Reflective Measurement Models (F, G, D)
+
+
+
+Before analyzing the results, we advise to frst check if the algorithm converged (i.e., the stop criterion of the algorithm was reached and not the maximum number of iterations)
+
+```{r}
+paste("The algorithm converged after iteration" ,summary_model$iterations)
+```
+
+If the PLS-SEM algorithm does not converge in fewer than 300 iterations, which is the default setting in most PLS-SEM software, the algorithm could not fnd a stable solution. 
+
+If the PLS-SEM algorithm does not converge in fewer than 300 iterations, which is the default setting in most PLS-SEM software, the algorithm could not fnd a stable solution. This kind of situation almost never occurs. But if it does occur, there are two possible causes: (1) The selected stop criterion is set at a very small level (e.g., 1.0E-10 as opposed to the standard of 1.0E-7), so that small changes in the coeffcients of the measurement models prevent the PLS-SEM algorithm from stopping, or (2) there are problems with the data and it needs to be checked care￾fully. For example, data problems may occur if the sample size is too small or if the responses to an indicator include many identical values (i.e., the same data points, which results in insuffcient variability, error message is singular matrix)
+
+```{r}
+# Inspect the outer loadings
+summary_model$loadings
+```
+
+ The calculation of indicator reliability can be automated by squaring the values in the indicator loading table.
+```{r}
+# Inspect the indicator loadings
+summary_model$loadings^2
+```
+
+All indicator loadings of the refectively measured constructs F and D are well above the threshold value of 0.708 (Hair, Risher, Sarstedt, & Ringle, 2019), which suggests suffcient levels of indicator reliability. 
+
+Berbeda untuk G, di mana ada 2 variabel G_1 dan G_3 di bawah threshold, tapi tetap bisa digunakan karena masih di atas 0.5
+
+
+```{r}
+# Inspect the composite reliability
+summary_model$reliability
+```
+
+Must be above the 0.70 threshold (Hair et al., 2019), indicating that all construct measures are reliable.
+
+With rhoA values of 0.798 (G), 0.815 (F) > threshold (0.7), but not in 0.625 (D).
+Similarly, the results for Cronbach's alpha 0.787 (G), 0.801 (F) > threshold (0.7), but not in 0.625 (D), and
+composite reliability rhoC 0.875 (G), 0.882 (F), and 0.842 (D) > threshold (0.7) all three reflectively measured constructs have high levels of internal consistency reliability.
+
+Convergent validity assessment is based on the average variance extracted  (AVE) values (Hair et al., 2019). Threshold > 0.5 (Hair et al., 2019)
+
+
+The results can also be visualized using a bar chart:
+
+
+```{r}
+plot(summary_model$reliability)
+```
+
+Terlihat pada plot bahwa variabel D berada di bawah threshold.
+
+According to the Fornell–Larcker criterion (Fornell & Larcker, 1981), the square root of the AVE of each construct should be higher than the construct’s highest correlation with any other construct in the model (this notion is identical to comparing the AVE with the squared correlations between the constructs). These results can be outputted by inspecting the summary and validity element for the f_criteria:
+
+
+```{r}
+# Table of the FL Criteria
+summary_model$validity$fl_criteria
+```
+
+Khusus kolom F, G, D, lihat nilai pertama dan bandingkan dengan nilai yang ada di bawahnya. 
+Overall, the square roots of the AVEs for the reflectively measured constructs F (0.844), G (0.837), and D (0.853) are all higher that the correlations of these constructs with other latent variables in the PLS path model.
+
+The primary criterion for dis￾criminant validity assessment is the HTMT criterion.
+
+```{r}
+# HTMT criterion
+summary_model$validity$htmt
+```
+
+All HTMT values are clearly lower than the more conservative threshold value of 0.85 (Henseler et al., 2015). Warning for F to G.
+
+In addition to examining the HTMT values, researchers should test whether the HTMT values are signifcantly different from 1 or a lower threshold, such as 0.9 or even 0.85. This analysis requires computing bootstrap confdence inter￾vals obtained by running the bootstrapping procedure.
+
+In doing so, we need to set the signifcance level from 0.05 (default setting) to 0.10 using the alpha argument. In this way, we obtain 90% two-sided bootstrap confdence intervals for the HTMT values, which is equivalent to running a one-tailed test at 5%.
+
+```{r}
+boot_rep <- bootstrap_model(seminr_model = pls_model, nboot = 1000)
+sum_boot_rep <- summary(boot_rep, alpha=0.10)
+```
+
+
+```{r}
+# Extract the bootstrapped HTMT
+sum_boot_rep$bootstrapped_HTMT
+```
+
+Upper boundaries must be < 0.90

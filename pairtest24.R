@@ -12,7 +12,7 @@ df_mhs_post <- read_sheet(url_post, sheet = "responses")
 # --- 3. PERSIAPAN DAN PEMBERSIHAN DATA ---
 
 # Daftar kolom yang akan dianalisis secara langsung
-kolom_analisis <- c("Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q10", "Q11")
+kolom_analisis <- c("Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8","Q9", "Q10", "Q11")
 
 # **PERBAIKAN KUNCI: Mengubah data teks menjadi numerik**
 # Fungsi untuk memetakan jawaban teks ke angka.
